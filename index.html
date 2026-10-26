@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#ff8a5b" />
+    <meta
+      name="description"
+      content="Docão Capitalista: um idle game de churrasco, red cup e fazenda. Compre negócios, contrate gerentes e monte o império."
+    />
+    <title>Docão Capitalista</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="sky">
+      <div class="app-shell">
+        <div class="lights" aria-hidden="true">
+          <i style="--c: #ffd166"></i>
+          <i style="--c: #ff6b6b"></i>
+          <i style="--c: #95d5b2"></i>
+          <i style="--c: #ffd166"></i>
+          <i style="--c: #c77dff"></i>
+          <i style="--c: #ff6b6b"></i>
+          <i style="--c: #ffd166"></i>
+          <i style="--c: #95d5b2"></i>
+          <i style="--c: #ff6b6b"></i>
+          <i style="--c: #ffd166"></i>
+          <i style="--c: #c77dff"></i>
+          <i style="--c: #95d5b2"></i>
+        </div>
+
+        <div class="layout">
+          <aside class="hero">
+            <div class="hero-id">
+              <button type="button" id="poke" class="mascot" aria-label="Cutucar o Docão">
+                <svg viewBox="0 0 200 180" aria-hidden="true">
+                  <ellipse cx="100" cy="168" rx="52" ry="8" fill="#3b2414" opacity="0.15" />
+                  <path
+                    d="M46 118c-14 6-16 22-4 26"
+                    fill="none"
+                    stroke="#ff9bb5"
+                    stroke-width="7"
+                    stroke-linecap="round"
+                  />
+                  <ellipse cx="52" cy="62" rx="22" ry="28" fill="#ff8fab" transform="rotate(-28 52 62)" />
+                  <ellipse cx="148" cy="62" rx="22" ry="28" fill="#ff8fab" transform="rotate(28 148 62)" />
+                  <ellipse cx="54" cy="64" rx="11" ry="16" fill="#ffd0dc" transform="rotate(-28 54 64)" />
+                  <ellipse cx="146" cy="64" rx="11" ry="16" fill="#ffd0dc" transform="rotate(28 146 64)" />
+                  <ellipse cx="100" cy="104" rx="68" ry="58" fill="#ffb3c6" stroke="#3b2414" stroke-width="3" />
+                  <ellipse cx="58" cy="116" rx="10" ry="6" fill="#ff6b93" opacity="0.45" />
+                  <ellipse cx="142" cy="116" rx="10" ry="6" fill="#ff6b93" opacity="0.45" />
+                  <g class="eyes">
+                    <ellipse cx="74" cy="96" rx="8" ry="10" fill="#3b2414" />
+                    <ellipse cx="126" cy="96" rx="8" ry="10" fill="#3b2414" />
+                    <circle cx="76" cy="92" r="3" fill="#fff" />
+                    <circle cx="128" cy="92" r="3" fill="#fff" />
+                  </g>
+                  <ellipse cx="100" cy="118" rx="28" ry="20" fill="#ff7aa2" stroke="#3b2414" stroke-width="3" />
+                  <ellipse cx="90" cy="118" rx="5" ry="7" fill="#6d3148" />
+                  <ellipse cx="110" cy="118" rx="5" ry="7" fill="#6d3148" />
+                  <path
+                    d="M82 136q18 14 36 0"
+                    fill="none"
+                    stroke="#6d3148"
+                    stroke-width="3"
+                    stroke-linecap="round"
+                  />
+                  <polygon
+                    points="100,12 76,52 124,52"
+                    fill="#e63946"
+                    stroke="#3b2414"
+                    stroke-width="3"
+                    stroke-linejoin="round"
+                  />
+                  <rect
+                    x="72"
+                    y="46"
+                    width="56"
+                    height="10"
+                    rx="3"
+                    fill="#ffd166"
+                    stroke="#3b2414"
+                    stroke-width="3"
+                  />
+                  <circle cx="100" cy="14" r="7" fill="#ffd166" stroke="#3b2414" stroke-width="3" />
+                  <g class="cup">
+                    <rect
+                      x="150"
+                      y="112"
+                      width="28"
+                      height="36"
+                      rx="5"
+                      fill="#e63946"
+                      stroke="#3b2414"
+                      stroke-width="3"
+                    />
+                    <ellipse cx="164" cy="114" rx="14" ry="6" fill="#ff8fa3" stroke="#3b2414" stroke-width="3" />
+                    <ellipse cx="164" cy="114" rx="8" ry="3" fill="#ffe8a3" />
+                    <line
+                      x1="170"
+                      y1="112"
+                      x2="178"
+                      y2="96"
+                      stroke="#ffd166"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                    />
+                  </g>
+                </svg>
+              </button>
+              <div class="sign">
+                <p class="eyebrow">fazenda &amp; festa</p>
+                <h1>Docão Capitalista</h1>
+              </div>
+            </div>
+
+            <p id="speech" class="speech">
+              Achei R$ 5 no fundo do red cup. A barraca custa R$ 4. O império começa assim, oinc.
+            </p>
+
+            <div class="sticky-stats">
+              <div class="wallet">
+                <p class="wallet-label">Saldo</p>
+                <p id="money" class="money">R$ 5,00</p>
+                <p class="rate"><span id="rate-value">R$ 0,00/s</span></p>
+                <p id="rate-sub" class="rate-sub">compra uma barraca pra começar</p>
+              </div>
+
+              <div class="modes" role="group" aria-label="Quantidade por compra">
+                <button type="button" data-qty="1" aria-pressed="true">×1</button>
+                <button type="button" data-qty="10" aria-pressed="false">×10</button>
+                <button type="button" data-qty="100" aria-pressed="false">×100</button>
+                <button type="button" data-qty="max" aria-pressed="false" aria-label="Máximo">Máx</button>
+              </div>
+            </div>
+
+            <p class="howto">
+              Compra, espera a barra encher e coleta. Com gerente, a grana entra sozinha — até 8 horas fora da tela.
+            </p>
+
+            <div class="hero-actions">
+              <button type="button" id="team-btn" class="btn btn-team">Ver equipe</button>
+              <button type="button" id="sound-btn" class="btn btn-sound" aria-pressed="false">Som: mudo</button>
+            </div>
+            <button type="button" id="reset-btn" class="btn btn-ghost">Recomeçar</button>
+            <p id="lifetime" class="lifetime">O caixa ainda está estreando.</p>
+          </aside>
+
+          <main aria-label="Negócios">
+            <div id="business-list" class="business-list"></div>
+          </main>
+        </div>
+
+        <footer class="foot">Salvo neste aparelho. O império não vai pra nuvem.</footer>
+      </div>
+    </div>
+
+    <dialog id="team-dialog" aria-labelledby="team-title">
+      <div class="dialog-head">
+        <h2 id="team-title">Equipe do Docão</h2>
+        <button type="button" class="btn btn-small" id="team-close">Fechar</button>
+      </div>
+      <div class="dialog-body">
+        <p class="dialog-lead">
+          Gerente é compra única. Ele coleta sozinho, mesmo de olho fechado, por até 8 horas fora da tela.
+        </p>
+        <div id="team-list"></div>
+      </div>
+    </dialog>
+
+    <dialog id="offline-dialog" aria-labelledby="offline-title">
+      <div class="dialog-head">
+        <h2 id="offline-title">Soneca lucrativa</h2>
+      </div>
+      <div class="dialog-body">
+        <p id="offline-copy"></p>
+        <p id="offline-gain" class="offline-gain"></p>
+        <p id="offline-extra" class="dialog-lead"></p>
+        <button type="button" class="btn btn-collect" id="offline-ok">Pegar a grana</button>
+      </div>
+    </dialog>
+
+    <dialog id="reset-dialog" aria-labelledby="reset-title">
+      <div class="dialog-head">
+        <h2 id="reset-title">Zerar o império?</h2>
+      </div>
+      <div class="dialog-body">
+        <p>
+          O caixa, os negócios e os gerentes somem deste aparelho. O Docão volta pro fundo do red cup, com R$ 5 e
+          uma barraca pra comprar.
+        </p>
+        <div class="dialog-actions">
+          <button type="button" class="btn" id="reset-cancel">Deixa quieto</button>
+          <button type="button" class="btn btn-danger" id="reset-confirm">Pode zerar</button>
+        </div>
+      </div>
+    </dialog>
+
+    <p id="live" class="sr-only" aria-live="polite"></p>
+    <noscript>
+      <p class="noscript">O Docão precisa de JavaScript pra fritar essa economia.</p>
+    </noscript>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
