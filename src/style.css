@@ -384,6 +384,9 @@ h1 {
 .btn-cost,
 .btn-label {
   display: block;
+  max-width: 100%;
+  text-align: center;
+  overflow-wrap: anywhere;
 }
 
 .btn-cost {
@@ -520,6 +523,12 @@ h1 {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  min-width: 0;
+}
+
+.biz-actions .btn {
+  min-width: 0;
+  width: 100%;
 }
 
 .floater {
@@ -549,7 +558,13 @@ dialog {
   padding: 0;
   max-width: 520px;
   width: calc(100% - 24px);
+  max-height: min(92dvh, 820px);
   box-shadow: 8px 8px 0 var(--ink);
+}
+
+dialog[open] {
+  display: flex;
+  flex-direction: column;
 }
 
 dialog::backdrop {
@@ -572,7 +587,6 @@ dialog::backdrop {
 
 .dialog-body {
   padding: 12px 14px 16px;
-  max-height: min(70dvh, 640px);
   overflow: auto;
 }
 
@@ -789,11 +803,7 @@ dialog::backdrop {
   }
 
   .biz-actions {
-    flex-direction: row;
-  }
-
-  .biz-actions .btn {
-    flex: 1;
+    flex-direction: column;
   }
 }
 
