@@ -174,11 +174,121 @@ export function mount(handlers) {
     });
   }
 
+  document.querySelector('#account-btn').addEventListener('click', () => handlers.onAccount());
+  document.querySelector('#account-close').addEventListener('click', () => {
+    document.querySelector('#account-dialog').close();
+  });
+  document.querySelector('#account-toggle').addEventListener('click', () => {
+    accountMode = accountMode === 'login' ? 'register' : 'login';
+    paintAccountMode();
+    const error = document.querySelector('#account-error');
+    error.hidden = true;
+    error.textContent = '';
+  });
+  document.querySelector('#account-logout').addEventListener('click', () => handlers.onLogout());
+  document.querySelector('#account-form').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const error = document.querySelector('#account-error');
+    const email = document.querySelector('#account-email').value.trim();
+    const password = document.querySelector('#account-password').value;
+    const submit = document.querySelector('#account-submit');
+    if (!email || !password) {
+      error.hidden = false;
+      error.textContent = 'Preenche e-mail e senha.';
+      return;
+    }
+    if (password.length < 8) {
+      error.hidden = false;
+      error.textContent = 'A senha precisa de 8 caracteres.';
+      return;
+    }
+    error.hidden = true;
+    error.textContent = '';
+    submit.disabled = true;
+    const previous = submit.textContent;
+    submit.textContent = accountMode === 'register' ? 'Criando…' : 'Entrando…';
+    try {
+      await handlers.onAuth({ mode: accountMode, email, password });
+    } catch (err) {
+      error.hidden = false;
+      error.textContent = err?.message || 'A nuvem não respondeu.';
+    } finally {
+      submit.disabled = false;
+      paintAccountMode();
+      if (submit.textContent === 'Criando…' || submit.textContent === 'Entrando…') submit.textContent = previous;
+    }
+  });
+
   for (const dialog of document.querySelectorAll('dialog')) {
     dialog.addEventListener('click', (event) => {
       if (event.target === dialog) dialog.close();
     });
   }
+}
+
+let accountMode = 'login';
+
+function paintAccountMode() {
+  const submit = document.querySelector('#account-submit');
+  const toggle = document.querySelector('#account-toggle');
+  const password = document.querySelector('#account-password');
+  if (!submit || !toggle || !password) return;
+  if (accountMode === 'register') {
+    submit.textContent = 'Criar conta';
+    toggle.textContent = 'Já tem conta? Entrar';
+    password.setAttribute('autocomplete', 'new-password');
+  } else {
+    submit.textContent = 'Entrar';
+    toggle.textContent = 'Não tem conta? Criar';
+    password.setAttribute('autocomplete', 'current-password');
+  }
+}
+
+export function openAccount(email) {
+  const guest = document.querySelector('#account-guest');
+  const user = document.querySelector('#account-user');
+  const error = document.querySelector('#account-error');
+  if (error) {
+    error.hidden = true;
+    error.textContent = '';
+  }
+  if (email) {
+    guest.hidden = true;
+    user.hidden = false;
+    document.querySelector('#account-who').textContent = email;
+  } else {
+    guest.hidden = false;
+    user.hidden = true;
+    accountMode = 'login';
+    paintAccountMode();
+  }
+  document.querySelector('#account-dialog').showModal();
+}
+
+export function closeAccount() {
+  document.querySelector('#account-dialog')?.close();
+}
+
+export function setResetMentionsCloud(on) {
+  const note = document.querySelector('#reset-cloud-note');
+  if (note) note.hidden = !on;
+}
+
+export function setSaveStatus(kind, email = '') {
+  const el = document.querySelector('#save-status');
+  const button = document.querySelector('#account-btn');
+  const copy = {
+    guest: 'Salvo neste aparelho. Entra pra guardar na nuvem.',
+    loading: 'Buscando o império na nuvem…',
+    saving: 'Salvando na nuvem…',
+    saved: email ? `Salvo na nuvem · ${email}` : 'Salvo na nuvem.',
+    offline: 'Sem rede. O império ficou neste aparelho.',
+  };
+  if (el) {
+    el.textContent = copy[kind] || copy.guest;
+    el.dataset.state = kind;
+  }
+  if (button) button.textContent = email ? 'Conta' : 'Entrar';
 }
 
 export function say(text, holdMs = 8000) {

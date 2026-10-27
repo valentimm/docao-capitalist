@@ -1,6 +1,7 @@
 import { ANGEL_UPGRADES, BUSINESSES, STARTING_MONEY, getAngelUpgrade } from './data.js';
 
 export const SAVE_VERSION = 2;
+// A nuvem aceita as mesmas versões em worker/src/http.js e src/save-sync.js.
 const ACCEPTED_SAVE_VERSIONS = [1, 2];
 export const MAX_OFFLINE_SECONDS = 8 * 60 * 60;
 export const FIRST_TIMER_RATIO = 0.2;

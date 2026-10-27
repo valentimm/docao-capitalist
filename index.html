@@ -154,7 +154,10 @@
               <button type="button" id="team-btn" class="btn btn-team">Ver equipe</button>
               <button type="button" id="sound-btn" class="btn btn-sound" aria-pressed="false">Som: mudo</button>
             </div>
-            <button type="button" id="reset-btn" class="btn btn-ghost">Recomeçar</button>
+            <div class="quiet-actions">
+              <button type="button" id="account-btn" class="btn btn-ghost">Entrar</button>
+              <button type="button" id="reset-btn" class="btn btn-ghost">Recomeçar</button>
+            </div>
             <p id="lifetime" class="lifetime">O caixa ainda está estreando.</p>
           </aside>
 
@@ -163,7 +166,7 @@
           </main>
         </div>
 
-        <footer class="foot">Salvo neste aparelho. O império não vai pra nuvem.</footer>
+        <footer id="save-status" class="foot" data-state="guest">Salvo neste aparelho. Entra pra guardar na nuvem.</footer>
       </div>
     </div>
 
@@ -233,6 +236,39 @@
       </div>
     </dialog>
 
+    <dialog id="account-dialog" aria-labelledby="account-title">
+      <div class="dialog-head">
+        <h2 id="account-title">Conta do Docão</h2>
+        <button type="button" class="btn btn-small" id="account-close">Fechar</button>
+      </div>
+      <div class="dialog-body">
+        <div id="account-guest">
+          <p class="dialog-lead">
+            Entra pra guardar o império na nuvem. Sem conta, o progresso fica só neste aparelho. Se os dois lados já
+            tiverem jogo, fica o que ganhou mais na carreira.
+          </p>
+          <form id="account-form" class="account-form" novalidate>
+            <label>
+              E-mail
+              <input id="account-email" type="email" autocomplete="username" inputmode="email" required />
+            </label>
+            <label>
+              Senha
+              <input id="account-password" type="password" autocomplete="current-password" minlength="8" required />
+            </label>
+            <p id="account-error" class="form-error" role="alert" hidden></p>
+            <button type="submit" class="btn" id="account-submit">Entrar</button>
+          </form>
+          <button type="button" class="btn btn-ghost" id="account-toggle">Não tem conta? Criar</button>
+        </div>
+        <div id="account-user" hidden>
+          <p id="account-who"></p>
+          <p class="dialog-lead">Outro aparelho com a mesma conta puxa este império. Sair não apaga o save da nuvem.</p>
+          <button type="button" class="btn btn-sound" id="account-logout">Sair</button>
+        </div>
+      </div>
+    </dialog>
+
     <dialog id="reset-dialog" aria-labelledby="reset-title">
       <div class="dialog-head">
         <h2 id="reset-title">Zerar o império?</h2>
@@ -242,6 +278,7 @@
           O caixa, os negócios, os gerentes, os anjos e as bênçãos somem deste aparelho. Isso não é renascimento: é
           zerar de verdade. O Docão volta pro fundo do red cup, com R$ 5.
         </p>
+        <p id="reset-cloud-note" hidden>Como você está logado, a nuvem também volta pro começo.</p>
         <div class="dialog-actions">
           <button type="button" class="btn" id="reset-cancel">Deixa quieto</button>
           <button type="button" class="btn btn-danger" id="reset-confirm">Pode zerar</button>
