@@ -37,7 +37,7 @@ export function mount(handlers) {
       <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Progresso de ${def.name}">
         <div class="bar-fill"></div>
       </div>
-      <button type="button" class="btn btn-collect collect" data-action="collect" hidden>Coletar</button>
+      <button type="button" class="btn btn-collect work" data-action="work" hidden>Começar</button>
       <div class="biz-meta">
         <span class="payout"></span>
         <span class="eta"></span>
@@ -54,7 +54,7 @@ export function mount(handlers) {
       owned: el.querySelector('.owned'),
       bar: el.querySelector('.bar'),
       fill: el.querySelector('.bar-fill'),
-      collect: el.querySelector('.collect'),
+      work: el.querySelector('.work'),
       payout: el.querySelector('.payout'),
       eta: el.querySelector('.eta'),
       manager: el.querySelector('.manager-line'),
@@ -67,7 +67,7 @@ export function mount(handlers) {
     });
     el.querySelector('[data-action="buy"]').addEventListener('click', () => handlers.onBuy(def.id));
     el.querySelector('[data-action="hire"]').addEventListener('click', () => handlers.onHire(def.id));
-    el.querySelector('[data-action="collect"]').addEventListener('click', () => handlers.onCollect(def.id));
+    el.querySelector('[data-action="work"]').addEventListener('click', () => handlers.onStart(def.id));
   }
 
   const teamList = document.querySelector('#team-list');
@@ -200,28 +200,28 @@ export function update(state) {
     const biz = state.businesses.find((b) => b.id === def.id);
     const card = cards.get(def.id);
     card.owned.textContent = `×${biz.owned.toLocaleString('pt-BR')}`;
-    card.el.classList.toggle('is-ready', biz.pending > 0);
     card.el.classList.toggle('is-auto', biz.hasManager);
 
-    const pct = def.time > 0 ? Math.min(100, (biz.timer / def.time) * 100) : 0;
+    const active = biz.hasManager || biz.running;
+    const pct = def.time > 0 && active ? Math.min(100, (biz.timer / def.time) * 100) : 0;
     card.fill.style.width = `${pct}%`;
     const shown = String(Math.round(pct));
     if (card.bar.getAttribute('aria-valuenow') !== shown) card.bar.setAttribute('aria-valuenow', shown);
 
-    const waiting = biz.pending > 0 && !biz.hasManager;
-    card.collect.hidden = !waiting;
-    card.bar.hidden = waiting;
-    if (waiting) card.collect.textContent = `Coletar ${formatMoney(biz.pending)}`;
+    const canStart = biz.owned > 0 && !biz.hasManager && !biz.running;
+    card.work.hidden = !canStart;
+    card.bar.hidden = canStart;
+    if (canStart) card.work.setAttribute('aria-label', `Começar ciclo de ${def.name}`);
 
     const payout = def.revenue * Math.max(biz.owned, 1);
     card.payout.textContent =
       biz.owned > 0 ? `rende ${formatMoney(def.revenue * biz.owned)}` : `rende ${formatMoney(payout)} cada`;
     if (biz.owned <= 0) card.eta.textContent = `ciclo de ${formatRemaining(def.time)}`;
-    else if (waiting) card.eta.textContent = 'pronto!';
+    else if (canStart) card.eta.textContent = 'toque pra começar';
     else card.eta.textContent = `falta ${formatRemaining(Math.max(0, def.time - biz.timer))}`;
 
     if (biz.hasManager) card.manager.textContent = `${def.manager} no automático`;
-    else if (biz.owned > 0) card.manager.textContent = 'Sem gerente · a coleta é na mão';
+    else if (biz.owned > 0) card.manager.textContent = 'Sem gerente · a grana cai no fim da barra';
     else card.manager.textContent = 'A primeira unidade libera o gerente';
 
     const quote = quoteBuy(state, def.id);

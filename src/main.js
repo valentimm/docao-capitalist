@@ -4,13 +4,13 @@ import { play, setSoundEnabled } from './audio.js';
 import {
   applyOffline,
   buy,
-  collect,
   createState,
   getDef,
   hire,
   hydrate,
   poke,
   serialize,
+  startCycle,
   tick,
 } from './economy.js';
 import { formatMoney } from './format.js';
@@ -94,12 +94,9 @@ mount({
     update(state);
     save();
   },
-  onCollect(id) {
-    const gain = collect(state, id);
-    if (!gain) return;
-    play('collect');
-    popCash(`+ ${formatMoney(gain)}`);
-    announce(`Coletou ${formatMoney(gain)} de ${getDef(id).name}.`);
+  onStart(id) {
+    if (!startCycle(state, id)) return;
+    play('start');
     update(state);
     save();
   },
@@ -160,6 +157,23 @@ window.setInterval(() => {
   rotateQuip(QUIPS[quipIndex]);
 }, 10000);
 
+function celebrate(payouts) {
+  const manual = payouts.filter((p) => p.manual && p.gain > 0);
+  if (!manual.length) return;
+  let sum = 0;
+  for (const payout of manual) {
+    sum += payout.gain;
+    cardFloater(payout.id, `+ ${formatMoney(payout.gain)}`);
+  }
+  popCash(`+ ${formatMoney(sum)}`);
+  play('collect');
+  if (manual.length === 1) {
+    announce(`+ ${formatMoney(manual[0].gain)} de ${getDef(manual[0].id).name}.`);
+  } else {
+    announce(`+ ${formatMoney(sum)} no fim dos ciclos.`);
+  }
+}
+
 function frame() {
   const wall = Date.now();
   let dt = (wall - lastWall) / 1000;
@@ -170,7 +184,7 @@ function frame() {
     if (report.gained >= 0.01) showOffline(report);
     save();
   } else if (dt > 0) {
-    tick(state, dt);
+    celebrate(tick(state, dt).payouts);
   }
   update(state);
   if (wall > nextSave) {

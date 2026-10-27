@@ -4,7 +4,6 @@ import { STARTING_MONEY } from '../src/data.js';
 import {
   applyOffline,
   buy,
-  collect,
   costOfMany,
   createState,
   hire,
@@ -13,6 +12,7 @@ import {
   poke,
   quoteBuy,
   serialize,
+  startCycle,
   tick,
 } from '../src/economy.js';
 import { formatMoney } from '../src/format.js';
@@ -38,18 +38,25 @@ test('custo geométrico e compra máxima', () => {
   assert.ok(costOfMany(4, 1.07, 0, qty + 1) > 30);
 });
 
-test('compra, coleta e gerente da barraca', () => {
+test('compra, ciclo e gerente da barraca', () => {
   const state = createState();
   assert.equal(state.money, STARTING_MONEY);
   assert.equal(buy(state, 'torresmo'), 1);
   assert.equal(state.businesses[0].owned, 1);
+  assert.equal(state.businesses[0].running, true);
   assert.equal(state.money, 1);
   assert.equal(hire(state, 'torresmo'), false);
 
-  tick(state, 1);
-  assert.equal(state.businesses[0].pending, 1);
-  assert.equal(collect(state, 'torresmo'), 1);
+  const mid = tick(state, 0.5);
+  assert.equal(mid.gained, 0);
+  assert.equal(state.money, 1);
+  assert.equal(state.businesses[0].pending, 0);
+
+  const done = tick(state, 0.5);
+  assert.equal(done.gained, 1);
+  assert.equal(done.payouts[0].manual, true);
   assert.equal(state.money, 2);
+  assert.equal(state.businesses[0].running, false);
   assert.equal(state.businesses[0].timer, 0);
 
   state.money = 350;
@@ -58,21 +65,89 @@ test('compra, coleta e gerente da barraca', () => {
   assert.equal(hire(state, 'torresmo'), true);
   assert.equal(state.businesses[0].hasManager, true);
   assert.equal(state.businesses[0].pending, 0);
+  assert.equal(state.businesses[0].running, true);
   assert.equal(state.money, 1);
 
   const gained = tick(state, 5);
-  assert.equal(gained, 5);
+  assert.equal(gained.gained, 5);
   assert.equal(state.money, 6);
+  assert.equal(state.businesses[0].running, true);
 });
 
-test('sem gerente, o tempo fora completa só um ciclo', () => {
+test('o clique começa a barra e o caixa só entra no fim', () => {
+  const state = createState();
+  buy(state, 'torresmo');
+  state.businesses[0].running = false;
+  state.businesses[0].timer = 0.4;
+  const money = state.money;
+
+  assert.equal(startCycle(state, 'torresmo'), true);
+  assert.equal(state.money, money);
+  assert.equal(state.businesses[0].timer, 0.4);
+  assert.equal(tick(state, 0.2).gained, 0);
+  assert.equal(state.money, money);
+  assert.equal(startCycle(state, 'torresmo'), false);
+  assert.equal(state.money, money);
+  assert.ok(state.businesses[0].timer > 0.4);
+
+  const done = tick(state, 0.5);
+  assert.equal(done.gained, 1);
+  assert.equal(state.money, money + 1);
+  assert.equal(state.businesses[0].running, false);
+  assert.equal(startCycle(state, 'torresmo'), true);
+  assert.equal(state.money, money + 1);
+  assert.equal(state.businesses[0].timer, 0);
+});
+
+test('sem gerente, o tempo fora fecha só o ciclo que já andava', () => {
   const state = createState();
   buy(state, 'torresmo');
   state.businesses[0].timer = 0;
+  state.businesses[0].running = true;
+  const money = state.money;
   const report = applyOffline(state, 500);
-  assert.equal(report.gained, 0);
-  assert.equal(state.businesses[0].pending, 1);
-  assert.deepEqual(report.ready, ['torresmo']);
+  assert.equal(report.gained, 1);
+  assert.equal(state.money, money + 1);
+  assert.equal(state.businesses[0].pending, 0);
+  assert.equal(state.businesses[0].running, false);
+  assert.equal(state.businesses[0].timer, 0);
+  assert.deepEqual(report.ready, []);
+
+  const idle = createState();
+  buy(idle, 'torresmo');
+  idle.businesses[0].running = false;
+  idle.businesses[0].timer = 0;
+  const idleMoney = idle.money;
+  const quiet = applyOffline(idle, 500);
+  assert.equal(quiet.gained, 0);
+  assert.equal(idle.money, idleMoney);
+});
+
+test('save antigo com coleta pendente credita uma vez', () => {
+  const state = hydrate({
+    v: 1,
+    money: 10,
+    totalEarned: 3,
+    buyQty: 1,
+    sound: false,
+    lastSaved: Date.now(),
+    businesses: [
+      {
+        id: 'torresmo',
+        owned: 2,
+        hasManager: false,
+        timer: 1,
+        pending: 2,
+      },
+    ],
+  });
+  assert.equal(state.money, 12);
+  assert.equal(state.totalEarned, 5);
+  assert.equal(state.businesses[0].pending, 0);
+  assert.equal(state.businesses[0].timer, 0);
+  assert.equal(state.businesses[0].running, false);
+  assert.equal(tick(state, 5).gained, 0);
+  assert.equal(state.money, 12);
 });
 
 test('offline de gerente respeita o teto de 8 horas', () => {
