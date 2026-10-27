@@ -15,7 +15,14 @@ import {
   startCycle,
   tick,
 } from '../src/economy.js';
-import { formatMoney } from '../src/format.js';
+import { formatAngels, formatMoney } from '../src/format.js';
+
+test('formato de anjos em pt-BR', () => {
+  assert.equal(formatAngels(0), '0 anjos');
+  assert.equal(formatAngels(1), '1 anjo');
+  assert.equal(formatAngels(10), '10 anjos');
+  assert.equal(formatAngels(1000), '1.000 anjos');
+});
 
 test('formato de dinheiro em pt-BR', () => {
   assert.equal(formatMoney(0), 'R$ 0,00');
@@ -166,7 +173,8 @@ test('offline de gerente respeita o teto de 8 horas', () => {
 
 test('save sobrevive a lixo e a ida e volta', () => {
   assert.equal(hydrate(null), null);
-  assert.equal(hydrate({ v: 2, businesses: [] }), null);
+  assert.equal(hydrate({ v: 3, businesses: [] }), null);
+  assert.equal(hydrate({ v: 0, businesses: [] }), null);
   const state = createState();
   state.money = 80;
   state.buyQty = 10;

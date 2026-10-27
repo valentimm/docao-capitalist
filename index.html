@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#ff8a5b" />
     <meta
       name="description"
-      content="Docão Capitalista: um idle game de churrasco, red cup e fazenda. Compre negócios, contrate gerentes e monte o império."
+      content="Docão Capitalista: um idle game de churrasco, red cup e fazenda. Compre negócios, contrate gerentes, renasça com anjos e monte o império."
     />
     <title>Docão Capitalista</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
@@ -132,6 +132,12 @@
                 <p id="rate-sub" class="rate-sub">compra uma barraca pra começar</p>
               </div>
 
+              <button type="button" id="angel-btn" class="angel-chip" aria-haspopup="dialog">
+                <span class="wallet-label">Anjos</span>
+                <strong id="angel-count">0</strong>
+                <span id="angel-pending" class="angel-pending">renascer ainda não rende</span>
+              </button>
+
               <div class="modes" role="group" aria-label="Quantidade por compra">
                 <button type="button" data-qty="1" aria-pressed="true">×1</button>
                 <button type="button" data-qty="10" aria-pressed="false">×10</button>
@@ -186,14 +192,55 @@
       </div>
     </dialog>
 
+    <dialog id="angel-dialog" aria-labelledby="angel-title">
+      <div class="dialog-head">
+        <h2 id="angel-title">Anjos do Docão</h2>
+        <button type="button" class="btn btn-small" id="angel-close">Fechar</button>
+      </div>
+      <div class="dialog-body">
+        <p class="dialog-lead">
+          Anjo é sócio de outra vida. Renascer zera o caixa, os negócios e os gerentes. Anjo e bênção ficam. A conta
+          usa a raiz de tudo que já passou pelo caixa. Um anjo sozinho quase não muda a brasa. A primeira bênção
+          custa 10.
+        </p>
+        <div class="angel-summary">
+          <p id="angel-pocket" class="angel-now">No bolso: 0 anjos.</p>
+          <p id="angel-preview">Se renascer agora: ainda nenhum anjo.</p>
+          <p id="angel-rate">Cada anjo no bolso dá +2% de receita.</p>
+          <p id="angel-effect">Na brasa agora: receita +0%.</p>
+          <p id="angel-career">Caixa de todas as vidas: R$ 0,00.</p>
+          <p id="angel-next">Próximo anjo quando esse caixa chegar a R$ 160 mil.</p>
+        </div>
+        <button type="button" class="btn btn-rebirth" id="rebirth-open" disabled>
+          <span class="btn-label">Renascer</span>
+          <span class="btn-cost">ainda não rende</span>
+        </button>
+        <p class="wallet-label shop-label">Bênçãos permanentes</p>
+        <div id="angel-shop"></div>
+      </div>
+    </dialog>
+
+    <dialog id="rebirth-dialog" aria-labelledby="rebirth-title">
+      <div class="dialog-head">
+        <h2 id="rebirth-title">Renascer o império?</h2>
+      </div>
+      <div class="dialog-body">
+        <p id="rebirth-copy"></p>
+        <div class="dialog-actions">
+          <button type="button" class="btn btn-sound" id="rebirth-cancel">Deixa quieto</button>
+          <button type="button" class="btn" id="rebirth-confirm">Renascer</button>
+        </div>
+      </div>
+    </dialog>
+
     <dialog id="reset-dialog" aria-labelledby="reset-title">
       <div class="dialog-head">
         <h2 id="reset-title">Zerar o império?</h2>
       </div>
       <div class="dialog-body">
         <p>
-          O caixa, os negócios e os gerentes somem deste aparelho. O Docão volta pro fundo do red cup, com R$ 5 e
-          uma barraca pra comprar.
+          O caixa, os negócios, os gerentes, os anjos e as bênçãos somem deste aparelho. Isso não é renascimento: é
+          zerar de verdade. O Docão volta pro fundo do red cup, com R$ 5.
         </p>
         <div class="dialog-actions">
           <button type="button" class="btn" id="reset-cancel">Deixa quieto</button>

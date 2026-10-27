@@ -1,9 +1,22 @@
-import { BUSINESSES } from './data.js';
-import { formatAway, formatMoney, formatRemaining } from './format.js';
-import { getDef, incomePerSecond, quoteBuy } from './economy.js';
+import { ANGEL_UPGRADES, BUSINESSES, STARTING_MONEY, getAngelUpgrade } from './data.js';
+import { formatAngels, formatAway, formatMoney, formatRemaining } from './format.js';
+import {
+  angelsDeserved,
+  cycleReward,
+  effectiveCycleTime,
+  getDef,
+  incomePerSecond,
+  lifetimeForAngelCount,
+  angelRate,
+  managerPrice,
+  pendingAngels,
+  quoteBuy,
+  revenueMultiplier,
+} from './economy.js';
 
 const cards = new Map();
 const teamRows = new Map();
+const angelRows = new Map();
 
 let live = null;
 let speechEl = null;
@@ -115,6 +128,44 @@ export function mount(handlers) {
   document.querySelector('#offline-ok').addEventListener('click', () => {
     document.querySelector('#offline-dialog').close();
   });
+  document.querySelector('#angel-btn').addEventListener('click', () => {
+    document.querySelector('#angel-dialog').showModal();
+  });
+  document.querySelector('#angel-close').addEventListener('click', () => {
+    document.querySelector('#angel-dialog').close();
+  });
+  document.querySelector('#rebirth-open').addEventListener('click', () => {
+    if (!viewState || pendingAngels(viewState) <= 0) return;
+    document.querySelector('#rebirth-copy').textContent = rebirthWarning(viewState);
+    document.querySelector('#rebirth-dialog').showModal();
+  });
+  document.querySelector('#rebirth-cancel').addEventListener('click', () => {
+    document.querySelector('#rebirth-dialog').close();
+  });
+  document.querySelector('#rebirth-confirm').addEventListener('click', () => {
+    document.querySelector('#rebirth-dialog').close();
+    handlers.onRebirth();
+  });
+
+  const shop = document.querySelector('#angel-shop');
+  for (const upgrade of ANGEL_UPGRADES) {
+    const row = document.createElement('article');
+    row.className = 'angel-row';
+    row.innerHTML = `
+      <h3>${upgrade.name}</h3>
+      <p class="angel-detail">${upgrade.detail}</p>
+      <p>${upgrade.blurb}</p>
+      <button type="button" class="btn btn-angel">${buttonParts('Comprar', '')}</button>
+    `;
+    shop.appendChild(row);
+    const button = row.querySelector('button');
+    angelRows.set(upgrade.id, {
+      button,
+      label: button.querySelector('.btn-label'),
+      cost: button.querySelector('.btn-cost'),
+    });
+    button.addEventListener('click', () => handlers.onBuyUpgrade(upgrade.id));
+  }
 
   for (const button of document.querySelectorAll('.modes button')) {
     button.addEventListener('click', () => {
@@ -161,7 +212,15 @@ export function cardFloater(id, text) {
   el.addEventListener('animationend', () => el.remove());
 }
 
+let viewState = null;
+
+export function rebirthWarning(state) {
+  const gain = pendingAngels(state);
+  return `Renascer entrega ${formatAngels(gain)}. O caixa volta pra ${formatMoney(STARTING_MONEY)}. Negócios, gerentes e ciclo no meio do caminho somem. Anjos, bênçãos e o caixa de todas as vidas ficam. A grana continua entrando só quando a barra enche.`;
+}
+
 export function update(state) {
+  viewState = state;
   const money = document.querySelector('#money');
   const nextMoney = formatMoney(state.money);
   if (money.textContent !== nextMoney) {
@@ -180,10 +239,69 @@ export function update(state) {
   else sub.textContent = `${formatMoney(rates.auto)}/s sozinho · ${formatMoney(rates.manual)}/s na mão`;
 
   const lifetime = document.querySelector('#lifetime');
-  lifetime.textContent =
-    state.totalEarned > 0
-      ? `Já passou pelo caixa: ${formatMoney(state.totalEarned)}`
-      : 'O caixa ainda está estreando.';
+  if (state.angels > 0 || state.angelsSpent > 0) {
+    lifetime.textContent = `Caixa de todas as vidas: ${formatMoney(state.totalEarned)}`;
+  } else {
+    lifetime.textContent =
+      state.totalEarned > 0
+        ? `Já passou pelo caixa: ${formatMoney(state.totalEarned)}`
+        : 'O caixa ainda está estreando.';
+  }
+
+  const pending = pendingAngels(state);
+  const angelBtn = document.querySelector('#angel-btn');
+  document.querySelector('#angel-count').textContent = Math.floor(state.angels).toLocaleString('pt-BR');
+  const pendingEl = document.querySelector('#angel-pending');
+  pendingEl.textContent = pending > 0 ? `+${formatAngels(pending)} se renascer` : 'renascer ainda não rende';
+  const shopDeal = ANGEL_UPGRADES.some((upgrade) => !state.angelUpgrades[upgrade.id] && state.angels >= upgrade.cost);
+  angelBtn.classList.toggle('has-deal', pending > 0);
+  angelBtn.classList.toggle('has-shop', shopDeal);
+  angelBtn.setAttribute(
+    'aria-label',
+    `Anjos do Docão. No bolso: ${formatAngels(state.angels)}. ${pendingEl.textContent}.`,
+  );
+
+  document.querySelector('#angel-pocket').textContent = `No bolso: ${formatAngels(state.angels)}.`;
+  document.querySelector('#angel-preview').textContent =
+    pending > 0 ? `Se renascer agora: +${formatAngels(pending)}.` : 'Se renascer agora: ainda nenhum anjo.';
+  const ratePct = Math.round(angelRate(state) * 100);
+  document.querySelector('#angel-rate').textContent = `Cada anjo no bolso dá +${ratePct}% de receita.`;
+  const bonusPct = Math.round((revenueMultiplier(state) - 1) * 100);
+  const effectParts = [`receita +${bonusPct.toLocaleString('pt-BR')}%`];
+  for (const id of ['carvao', 'atacado', 'equipe']) {
+    if (state.angelUpgrades[id]) effectParts.push(getAngelUpgrade(id).detail);
+  }
+  document.querySelector('#angel-effect').textContent = `Na brasa agora: ${effectParts.join(' · ')}.`;
+  document.querySelector('#angel-career').textContent =
+    `Caixa de todas as vidas: ${formatMoney(state.totalEarned)}.`;
+  const nextAngels = angelsDeserved(state.totalEarned) + 1;
+  document.querySelector('#angel-next').textContent =
+    `Próximo anjo quando esse caixa chegar a ${formatMoney(lifetimeForAngelCount(nextAngels))}.`;
+
+  const rebirthBtn = document.querySelector('#rebirth-open');
+  rebirthBtn.disabled = pending <= 0;
+  rebirthBtn.querySelector('.btn-label').textContent = 'Renascer';
+  rebirthBtn.querySelector('.btn-cost').textContent = pending > 0 ? `+${formatAngels(pending)}` : 'ainda não rende';
+  const rebirthDialog = document.querySelector('#rebirth-dialog');
+  if (rebirthDialog.open) {
+    document.querySelector('#rebirth-copy').textContent = rebirthWarning(state);
+    document.querySelector('#rebirth-confirm').disabled = pending <= 0;
+  }
+
+  for (const upgrade of ANGEL_UPGRADES) {
+    const row = angelRows.get(upgrade.id);
+    const owned = Boolean(state.angelUpgrades[upgrade.id]);
+    const canBuy = !owned && state.angels >= upgrade.cost;
+    row.button.disabled = !canBuy;
+    row.button.classList.toggle('is-owned', owned);
+    if (owned) {
+      row.label.textContent = 'Na brasa';
+      row.cost.textContent = 'pra sempre';
+    } else {
+      row.label.textContent = 'Comprar';
+      row.cost.textContent = formatAngels(upgrade.cost);
+    }
+  }
 
   for (const button of document.querySelectorAll('.modes button')) {
     const qty = button.dataset.qty === 'max' ? 'max' : Number(button.dataset.qty);
@@ -202,8 +320,9 @@ export function update(state) {
     card.owned.textContent = `×${biz.owned.toLocaleString('pt-BR')}`;
     card.el.classList.toggle('is-auto', biz.hasManager);
 
+    const cycle = effectiveCycleTime(state, def);
     const active = biz.hasManager || biz.running;
-    const pct = def.time > 0 && active ? Math.min(100, (biz.timer / def.time) * 100) : 0;
+    const pct = cycle > 0 && active ? Math.min(100, (biz.timer / cycle) * 100) : 0;
     card.fill.style.width = `${pct}%`;
     const shown = String(Math.round(pct));
     if (card.bar.getAttribute('aria-valuenow') !== shown) card.bar.setAttribute('aria-valuenow', shown);
@@ -213,12 +332,12 @@ export function update(state) {
     card.bar.hidden = canStart;
     if (canStart) card.work.setAttribute('aria-label', `Começar ciclo de ${def.name}`);
 
-    const payout = def.revenue * Math.max(biz.owned, 1);
+    const payout = cycleReward(state, def, Math.max(biz.owned, 1));
     card.payout.textContent =
-      biz.owned > 0 ? `rende ${formatMoney(def.revenue * biz.owned)}` : `rende ${formatMoney(payout)} cada`;
-    if (biz.owned <= 0) card.eta.textContent = `ciclo de ${formatRemaining(def.time)}`;
+      biz.owned > 0 ? `rende ${formatMoney(payout)}` : `rende ${formatMoney(payout)} cada`;
+    if (biz.owned <= 0) card.eta.textContent = `ciclo de ${formatRemaining(cycle)}`;
     else if (canStart) card.eta.textContent = 'toque pra começar';
-    else card.eta.textContent = `falta ${formatRemaining(Math.max(0, def.time - biz.timer))}`;
+    else card.eta.textContent = `falta ${formatRemaining(Math.max(0, cycle - biz.timer))}`;
 
     if (biz.hasManager) card.manager.textContent = `${def.manager} no automático`;
     else if (biz.owned > 0) card.manager.textContent = 'Sem gerente · a grana cai no fim da barra';
@@ -232,7 +351,8 @@ export function update(state) {
     card.buyCost.textContent = formatMoney(quote.cost);
 
     const team = teamRows.get(def.id);
-    const canHire = !biz.hasManager && biz.owned >= 1 && state.money + 1e-6 >= def.managerCost;
+    const hireCost = managerPrice(state, def);
+    const canHire = !biz.hasManager && biz.owned >= 1 && state.money + 1e-6 >= hireCost;
     if (canHire) hireDeal = true;
 
     if (biz.hasManager) {
@@ -257,11 +377,11 @@ export function update(state) {
       card.hire.disabled = !canHire;
       card.hire.classList.remove('is-hired');
       card.hireLabel.textContent = 'Contratar';
-      card.hireCost.textContent = formatMoney(def.managerCost);
+      card.hireCost.textContent = formatMoney(hireCost);
       team.button.disabled = !canHire;
       team.button.classList.remove('is-hired');
       team.label.textContent = 'Contratar';
-      team.cost.textContent = formatMoney(def.managerCost);
+      team.cost.textContent = formatMoney(hireCost);
     }
   }
 

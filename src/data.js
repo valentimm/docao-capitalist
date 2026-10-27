@@ -124,6 +124,54 @@ export const BUSINESSES = [
   },
 ];
 
+/**
+ * Bênçãos permanentes, compradas com anjos.
+ * Os números de efeito ficam em economy.js (mesma ordem de id).
+ * Custo sobe junto com o poder: a primeira vale a pena assim que dá;
+ * as outras pedem um império no meio do caminho.
+ */
+export const ANGEL_UPGRADES = [
+  {
+    id: 'brasa',
+    name: 'Brasa abençoada',
+    blurb: 'A fumaça trabalha dobrado. O clique de começar continua sem pagar.',
+    detail: 'Toda a receita dobra',
+    cost: 10,
+  },
+  {
+    id: 'carvao',
+    name: 'Carvão mais quente',
+    blurb: 'A brasa não espera. A grana segue caindo só no fim da barra.',
+    detail: 'Ciclos 25% mais curtos',
+    cost: 15,
+  },
+  {
+    id: 'equipe',
+    name: 'Equipe de confiança',
+    blurb: 'Na hora de montar a equipe de novo, o contrato vem mais leve.',
+    detail: 'Gerentes 30% mais baratos',
+    cost: 20,
+  },
+  {
+    id: 'atacado',
+    name: 'Atacado da porcada',
+    blurb: 'Do milho ao carvão, o fornecedor já conhece o Docão.',
+    detail: 'Negócios 40% mais baratos',
+    cost: 25,
+  },
+  {
+    id: 'bencao',
+    name: 'Bênção dobrada',
+    blurb: 'O anjo que fica no bolso abençoa em dobro. Anjo gasto não entra.',
+    detail: 'Cada anjo no bolso dá +4% em vez de +2%',
+    cost: 30,
+  },
+];
+
+export function getAngelUpgrade(id) {
+  return ANGEL_UPGRADES.find((upgrade) => upgrade.id === id) ?? null;
+}
+
 export const QUIPS = [
   'Oinc. Isso aí é cheiro de lucro, não de chiqueiro.',
   'Torresmo não se discute. Se frita e se vende.',
@@ -141,6 +189,9 @@ export const QUIPS = [
   'Primeiro a barraca. Depois o mundo. Depois a sobremesa.',
   'Cutucar o porco rende gorjeta. Método antigo.',
   'Mega fazenda começa com um espetinho sem vergonha.',
+  'Anjo bom não apaga a brasa. Ele espera o renascimento.',
+  'Renascer dói no caixa e ajuda na próxima vida.',
+  'Anjo no bolso é sócio. Anjo gasto vira bênção.',
 ];
 
 export const TUTORIAL =

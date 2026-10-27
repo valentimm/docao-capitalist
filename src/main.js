@@ -1,19 +1,21 @@
 import './style.css';
-import { QUIPS, TUTORIAL } from './data.js';
+import { QUIPS, TUTORIAL, getAngelUpgrade } from './data.js';
 import { play, setSoundEnabled } from './audio.js';
 import {
   applyOffline,
   buy,
+  buyAngelUpgrade,
   createState,
   getDef,
   hire,
   hydrate,
   poke,
+  rebirth,
   serialize,
   startCycle,
   tick,
 } from './economy.js';
-import { formatMoney } from './format.js';
+import { formatAngels, formatMoney } from './format.js';
 import { announce, cardFloater, mount, pokeSquash, popCash, rotateQuip, say, showOffline, update } from './ui.js';
 
 const SAVE_KEY = 'docao-capitalista-v1';
@@ -59,7 +61,9 @@ setSoundEnabled(state.sound);
 function freshSpeech() {
   const owned = state.businesses.reduce((sum, b) => sum + b.owned, 0);
   if (owned === 0 && state.totalEarned === 0) say(TUTORIAL, 14000);
-  else say('Voltou. A brasa ainda está acesa.', 7000);
+  else if (owned === 0 && (state.angels > 0 || state.angelsSpent > 0)) {
+    say('Os anjos ficaram. A barraca é o primeiro passo de novo.', 9000);
+  } else say('Voltou. A brasa ainda está acesa.', 7000);
 }
 
 mount({
@@ -123,6 +127,30 @@ mount({
     setSoundEnabled(state.sound);
     if (state.sound) play('buy');
     say(state.sound ? 'Som ligado. Oinc com volume.' : 'Som mudo. O porco continua, só que calado.');
+    update(state);
+    save();
+  },
+  onRebirth() {
+    const gain = rebirth(state);
+    if (!gain) return;
+    play('hire');
+    popCash(`+ ${formatAngels(gain)}`);
+    say(
+      gain === 1
+        ? 'Renascido. Um anjo ficou de olho na brasa.'
+        : `Renascido. ${formatAngels(gain)} ficaram de olho na brasa.`,
+      9000,
+    );
+    announce(`Renascimento: +${formatAngels(gain)}.`);
+    update(state);
+    save();
+  },
+  onBuyUpgrade(id) {
+    const upgrade = getAngelUpgrade(id);
+    if (!upgrade || !buyAngelUpgrade(state, id)) return;
+    play('buy');
+    say(`${upgrade.name}. Isso fica pra próxima vida também.`);
+    announce(`${upgrade.name} comprada.`);
     update(state);
     save();
   },
