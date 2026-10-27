@@ -347,6 +347,65 @@ h1 {
   padding: 0 4px;
 }
 
+.quiet-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 14px;
+}
+
+.account-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 8px 0 4px;
+}
+
+.account-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-weight: 700;
+}
+
+.account-form input {
+  font: inherit;
+  color: var(--ink);
+  background: #fff;
+  border: 3px solid var(--ink);
+  border-radius: 12px;
+  min-height: 44px;
+  padding: 8px 10px;
+}
+
+.form-error {
+  color: #9d1824;
+  font-weight: 700;
+  margin: 0;
+}
+
+#account-submit {
+  width: 100%;
+  flex-direction: row;
+}
+
+#account-who {
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+#account-logout {
+  width: 100%;
+  margin-top: 8px;
+}
+
+#save-status[data-state='saved'] {
+  color: var(--leaf-deep);
+}
+
+#save-status[data-state='offline'] {
+  color: #9d1824;
+}
+
 .btn-small {
   min-height: 40px;
   background: #fff;
