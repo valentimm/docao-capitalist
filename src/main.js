@@ -288,7 +288,9 @@ function frame() {
     if (report.gained >= 0.01) showOffline(report);
     save(report.gained > 0 ? 'catchup' : 'auto');
   } else if (dt > 0) {
-    celebrate(tick(state, dt).payouts);
+    const result = tick(state, dt);
+    celebrate(result.payouts);
+    if (result.gained > 0) save('mutate');
   }
   update(state);
   if (wall > nextSave) {
