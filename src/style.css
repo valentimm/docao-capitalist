@@ -376,6 +376,134 @@ h1 {
   animation: pulse 0.9s ease-in-out infinite;
 }
 
+.angel-chip {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-areas:
+    "label count"
+    "pending pending";
+  gap: 0 8px;
+  align-items: center;
+  width: 100%;
+  text-align: left;
+  background: #fff;
+  border: 3px solid var(--ink);
+  border-radius: 14px;
+  box-shadow: 0 3px 0 var(--ink);
+  min-height: 52px;
+  padding: 6px 10px 8px;
+  cursor: pointer;
+}
+
+.angel-chip .wallet-label {
+  grid-area: label;
+}
+
+.angel-chip strong {
+  grid-area: count;
+  justify-self: end;
+  font-size: 1.2rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.angel-pending {
+  grid-area: pending;
+  color: var(--ink-soft);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.angel-chip.has-deal {
+  background: var(--gold);
+}
+
+.angel-chip.has-deal .angel-pending {
+  color: var(--ink);
+}
+
+.angel-chip.has-shop strong::after {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-left: 6px;
+  background: var(--cup);
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  vertical-align: middle;
+}
+
+.angel-chip:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--ink);
+}
+
+.btn-rebirth {
+  width: 100%;
+  margin: 4px 0 8px;
+}
+
+.btn-angel.is-owned {
+  background: #d8f3dc;
+  color: var(--leaf-deep);
+}
+
+.angel-summary {
+  background: var(--paper);
+  border: 3px solid var(--ink);
+  border-radius: 16px;
+  padding: 10px 12px;
+  margin-bottom: 4px;
+}
+
+.angel-summary p {
+  margin: 0 0 6px;
+}
+
+.angel-summary p:last-child {
+  margin-bottom: 0;
+}
+
+.angel-now {
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.shop-label {
+  margin: 12px 0 0;
+}
+
+.angel-row {
+  padding: 12px 0;
+  border-bottom: 2px dashed var(--line);
+}
+
+.angel-row:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.angel-row h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.angel-detail {
+  margin: 2px 0 0;
+  color: var(--leaf-deep);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.angel-row p {
+  margin: 4px 0 8px;
+  font-size: 0.9rem;
+}
+
+.angel-row .btn {
+  width: 100%;
+}
+
 .btn-danger {
   background: var(--cup);
   color: #fff8f4;
@@ -565,6 +693,7 @@ dialog {
 dialog[open] {
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 dialog::backdrop {
@@ -588,6 +717,7 @@ dialog::backdrop {
 .dialog-body {
   padding: 12px 14px 16px;
   overflow: auto;
+  min-height: 0;
 }
 
 .dialog-body > p {

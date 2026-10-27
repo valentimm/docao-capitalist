@@ -13,6 +13,13 @@ function formatScaled(scaled) {
   }).format(scaled);
 }
 
+/** Contagem de anjos: "1 anjo", "12 anjos", "1.000 anjos". */
+export function formatAngels(value) {
+  const n = Math.max(0, Math.floor(Number.isFinite(value) ? value : 0));
+  if (n === 1) return '1 anjo';
+  return `${n.toLocaleString('pt-BR')} anjos`;
+}
+
 /** R$ no padrão pt-BR, com sufixo a partir de mil (mil, mi, bi, tri…). */
 export function formatMoney(value) {
   if (!Number.isFinite(value)) return 'R$ —';
