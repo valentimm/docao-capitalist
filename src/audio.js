@@ -44,6 +44,8 @@ export function play(kind) {
   if (kind === 'buy') {
     tone(520, t, 0.08, 'triangle', 0.04);
     tone(680, t + 0.07, 0.1, 'triangle', 0.04);
+  } else if (kind === 'start') {
+    tone(440, t, 0.06, 'triangle', 0.03);
   } else if (kind === 'collect') {
     tone(880, t, 0.09, 'square', 0.03);
     tone(1180, t + 0.06, 0.12, 'square', 0.025);

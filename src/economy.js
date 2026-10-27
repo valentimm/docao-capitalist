@@ -30,6 +30,7 @@ export function createState() {
       hasManager: false,
       timer: 0,
       pending: 0,
+      running: false,
     })),
   };
 }
@@ -84,7 +85,10 @@ export function buy(state, id) {
   state.money = roundMoney(state.money - quote.cost);
   if (state.money < 0) state.money = 0;
   biz.owned += quote.qty;
-  if (wasZero) biz.timer = def.time * FIRST_TIMER_RATIO;
+  if (wasZero) {
+    biz.running = true;
+    biz.timer = def.time * FIRST_TIMER_RATIO;
+  }
   if (biz.pending > 0) biz.pending = def.revenue * biz.owned;
   return quote.qty;
 }
@@ -97,6 +101,7 @@ export function hire(state, id) {
   state.money = roundMoney(state.money - def.managerCost);
   if (state.money < 0) state.money = 0;
   biz.hasManager = true;
+  biz.running = true;
   if (biz.pending > 0) {
     state.money = roundMoney(state.money + biz.pending);
     state.totalEarned = roundMoney(state.totalEarned + biz.pending);
@@ -106,15 +111,15 @@ export function hire(state, id) {
   return true;
 }
 
-export function collect(state, id) {
+/** Começa um ciclo. Não mexe no caixa — a receita só entra quando a barra enche. */
+export function startCycle(state, id) {
+  const def = getDef(id);
   const biz = businessOf(state, id);
-  if (!biz || biz.pending <= 0 || biz.hasManager) return 0;
-  const gain = biz.pending;
+  if (!def || !biz || biz.owned < 1 || biz.hasManager || biz.running) return false;
+  biz.running = true;
   biz.pending = 0;
-  biz.timer = 0;
-  state.money = roundMoney(state.money + gain);
-  state.totalEarned = roundMoney(state.totalEarned + gain);
-  return gain;
+  if (!(biz.timer > 0) || biz.timer >= def.time) biz.timer = 0;
+  return true;
 }
 
 /** Gorjeta do cutuco: 10% de 1 segundo de renda, no mínimo R$ 0,50. */
@@ -145,45 +150,59 @@ export function incomePerSecond(state) {
 }
 
 /**
- * Avança o tempo. Gerente completa vários ciclos e soma no caixa.
- * Sem gerente, no máximo um ciclo fica pronto para coleta.
+ * Avança o tempo. A receita entra no caixa quando o ciclo completa.
+ * Com gerente, vários ciclos fecham e o próximo já recomeça.
+ * Sem gerente, só corre o ciclo que foi iniciado, e para no fim.
  */
 export function tick(state, dt) {
-  if (!Number.isFinite(dt) || dt <= 0) return 0;
+  if (!Number.isFinite(dt) || dt <= 0) return { gained: 0, payouts: [] };
   const before = state.money;
+  const payouts = [];
   for (const biz of state.businesses) {
     if (biz.owned <= 0) continue;
     const def = getDef(biz.id);
-    if (biz.pending > 0 && !biz.hasManager) continue;
+    if (!def) continue;
+    const auto = Boolean(biz.hasManager);
+    if (!auto && !biz.running) continue;
     biz.timer += dt;
     if (biz.timer < def.time) continue;
-    if (biz.hasManager) {
+    if (auto) {
       const cycles = Math.floor(biz.timer / def.time);
       const gain = cycles * def.revenue * biz.owned;
       biz.timer -= cycles * def.time;
-      state.money += gain;
-      state.totalEarned += gain;
+      biz.running = true;
+      if (gain > 0) {
+        state.money += gain;
+        state.totalEarned += gain;
+        payouts.push({ id: biz.id, gain, manual: false });
+      }
     } else {
-      biz.timer = def.time;
-      biz.pending = def.revenue * biz.owned;
+      const gain = def.revenue * biz.owned;
+      if (gain > 0) {
+        state.money += gain;
+        state.totalEarned += gain;
+        payouts.push({ id: biz.id, gain, manual: true });
+      }
+      biz.running = false;
+      biz.timer = 0;
+      biz.pending = 0;
     }
   }
   state.money = roundMoney(state.money);
   state.totalEarned = roundMoney(state.totalEarned);
-  return roundMoney(state.money - before);
+  return { gained: roundMoney(state.money - before), payouts };
 }
 
 export function applyOffline(state, seconds) {
   const safe = Number.isFinite(seconds) ? Math.max(0, seconds) : 0;
   const applied = Math.min(safe, MAX_OFFLINE_SECONDS);
-  const beforePending = state.businesses.map((b) => b.pending);
-  const gained = tick(state, applied);
-  const ready = state.businesses.filter((b, i) => b.pending > beforePending[i]).map((b) => b.id);
+  const result = tick(state, applied);
   return {
-    gained,
+    gained: result.gained,
     applied,
     capped: safe > MAX_OFFLINE_SECONDS + 0.001,
-    ready,
+    ready: [],
+    payouts: result.payouts,
   };
 }
 
@@ -201,6 +220,7 @@ export function serialize(state) {
       hasManager: b.hasManager,
       timer: b.timer,
       pending: b.pending,
+      running: Boolean(b.running),
     })),
   };
 }
@@ -224,11 +244,50 @@ export function hydrate(raw) {
     biz.owned = Math.min(1e9, Math.floor(finiteNonNeg(saved.owned, 0)));
     biz.hasManager = Boolean(saved.hasManager) && biz.owned >= 1;
     biz.timer = Math.min(def.time, finiteNonNeg(saved.timer, 0));
-    biz.pending = biz.hasManager ? 0 : finiteNonNeg(saved.pending, 0);
-    if (biz.hasManager && finiteNonNeg(saved.pending, 0) > 0) {
-      const pocket = finiteNonNeg(saved.pending, 0);
+    const pocket = finiteNonNeg(saved.pending, 0);
+    biz.pending = 0;
+
+    if (biz.hasManager && pocket > 0) {
       state.money = roundMoney(state.money + pocket);
       state.totalEarned = roundMoney(state.totalEarned + pocket);
+    }
+
+    if (biz.owned < 1) {
+      biz.running = false;
+      biz.timer = 0;
+      continue;
+    }
+
+    if (biz.hasManager) {
+      biz.running = true;
+      continue;
+    }
+
+    if (typeof saved.running === 'boolean') {
+      biz.running = saved.running;
+      if (pocket > 0) {
+        state.money = roundMoney(state.money + pocket);
+        state.totalEarned = roundMoney(state.totalEarned + pocket);
+        biz.timer = 0;
+        biz.running = false;
+      }
+      continue;
+    }
+
+    // Save antigo: a barra andava sozinha e o clique em Coletar é que pagava.
+    if (pocket > 0) {
+      state.money = roundMoney(state.money + pocket);
+      state.totalEarned = roundMoney(state.totalEarned + pocket);
+      biz.timer = 0;
+      biz.running = false;
+    } else if (biz.timer >= def.time) {
+      const gain = def.revenue * biz.owned;
+      state.money = roundMoney(state.money + gain);
+      state.totalEarned = roundMoney(state.totalEarned + gain);
+      biz.timer = 0;
+      biz.running = false;
+    } else {
+      biz.running = true;
     }
   }
   return state;
