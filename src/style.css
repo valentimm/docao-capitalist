@@ -11,6 +11,8 @@
   --cup: #e63946;
   --pink: #ff8fa3;
   --shadow: 4px 4px 0 var(--ink);
+  /* Começar and the cycle bar share this slot height. */
+  --slot-height: 48px;
   color-scheme: light;
 }
 
@@ -112,6 +114,39 @@ body {
   border-radius: 22px;
   padding: 12px;
   box-shadow: var(--shadow);
+}
+
+.hero-pin,
+.hero-rest {
+  display: contents;
+}
+
+.hero-id {
+  order: 1;
+}
+
+.speech {
+  order: 2;
+}
+
+.sticky-stats {
+  order: 3;
+}
+
+.howto {
+  order: 4;
+}
+
+.hero-actions {
+  order: 5;
+}
+
+.quiet-actions {
+  order: 6;
+}
+
+.lifetime {
+  order: 7;
 }
 
 .hero-id {
@@ -289,7 +324,7 @@ h1 {
   background: var(--gold);
   box-shadow: 0 4px 0 var(--ink);
   padding: 8px 10px;
-  min-height: 48px;
+  min-height: var(--slot-height);
   cursor: pointer;
   display: flex;
   flex-direction: column;
@@ -670,13 +705,16 @@ h1 {
 .bar,
 .work {
   grid-area: bar;
+  height: var(--slot-height);
+  min-height: var(--slot-height);
+  max-height: var(--slot-height);
 }
 
 .bar {
-  height: 18px;
   background: #f0e2d0;
   border: 3px solid var(--ink);
-  border-radius: 999px;
+  border-radius: 14px;
+  box-shadow: 0 4px 0 var(--ink);
   overflow: hidden;
 }
 
@@ -940,24 +978,93 @@ dialog::backdrop {
 
   .layout {
     grid-template-columns: 1fr;
-    padding: 8px 12px 12px;
+    padding: 8px 0 12px;
+    gap: 12px;
   }
 
   .hero {
-    position: static;
-    gap: 8px;
-    padding: 8px;
+    display: contents;
   }
 
-  .sticky-stats {
+  .hero-pin {
     position: sticky;
     top: 0;
-    z-index: 5;
-    gap: 8px;
-    margin: 0 -8px;
-    padding: 8px;
+    z-index: 6;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      "brand brand"
+      "id wallet"
+      "angels angels"
+      "modes modes";
+    gap: 8px 10px;
+    align-items: center;
+    padding: max(8px, env(safe-area-inset-top)) 12px 8px;
     background: #fff1dc;
     border-bottom: 3px solid var(--ink);
+    box-shadow: 0 4px 0 rgb(59 36 20 / 12%);
+  }
+
+  .hero-pin .hero-id,
+  .hero-pin .sticky-stats {
+    display: contents;
+  }
+
+  .hero-pin .mascot {
+    grid-area: id;
+    width: 72px;
+    height: 68px;
+  }
+
+  .hero-pin .sign {
+    grid-area: brand;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    min-width: 0;
+    padding: 4px 10px;
+    border-radius: 12px;
+    box-shadow: 2px 2px 0 var(--ink);
+  }
+
+  .hero-pin .eyebrow {
+    font-size: 0.68rem;
+    white-space: nowrap;
+  }
+
+  .hero-pin h1 {
+    font-size: clamp(0.95rem, 4.2vw, 1.15rem);
+    white-space: nowrap;
+  }
+
+  .hero-pin .wallet {
+    grid-area: wallet;
+    min-width: 0;
+  }
+
+  .hero-pin .angel-chip {
+    grid-area: angels;
+  }
+
+  .hero-pin .modes {
+    grid-area: modes;
+  }
+
+  .hero-rest {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0 12px;
+    background: #fff1dc;
+    border: 3px solid var(--ink);
+    border-radius: 22px;
+    padding: 8px;
+    box-shadow: var(--shadow);
+  }
+
+  main {
+    padding: 0 12px;
   }
 
   .mascot {
